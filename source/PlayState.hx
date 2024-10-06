@@ -28,16 +28,20 @@ class PlayState extends FlxState
 	private var scoreTxt:FlxText /* = "Score: 0"*/;
 	private var scoreGrp:FlxTypedGroup<FlxText>;
 
+	private static var started:Bool = true;
+
 	// private var areaReference:FlxSprite;
 	// private var level:Int = 1;
 
 	override public function create()
 	{
+		if (started)
+			openSubState(new Menu());
+
 		FlxG.camera.bgColor = 0xFFFFFFFF;
 
-		FlxG.sound.playMusic("assets/music/Camaleon.mp3");
-
 		super.create();
+
 		var bg = new FlxSprite().loadGraphic("assets/images/Bg.png");
 		add(bg);
 
@@ -73,6 +77,14 @@ class PlayState extends FlxState
 		// areaReference.alpha = 0.6;
 	}
 
+	override function closeSubState()
+	{
+		super.closeSubState();
+
+		FlxG.sound.playMusic("assets/music/Camaleon.mp3");
+		started = false;
+	}
+
 	var timer:Float = 0;
 
 	var waitTime:Float = 5.2;
@@ -93,85 +105,96 @@ class PlayState extends FlxState
 		healthTxt.x = FlxG.width - healthTxt.width - 15;
 		healthTxt.y = scoreTxt.y + scoreTxt.height + 15;
 
-		if (timer == 0 && waitTime < 3)
-			waitRandom = FlxG.random.float(1, 2);
-
-		timer += elapsed;
-
-		if (timer >= waitTime / waitRandom)
+		if (!started)
 		{
-			var fly = new Fly(FlxG.random.float(1, 2.5), this);
-			// fly.ID;
+			if (timer == 0 && waitTime < 3)
+				waitRandom = FlxG.random.float(1, 2);
 
-			var area = new FlxSprite().makeGraphic(Std.int(fly.width), Std.int(fly.height), 0x8CFF0000);
-			area.setPosition(fly.destiny.x, fly.destiny.y);
+			timer += elapsed;
 
-			fly.area = area;
-
-			areaFlies.add(area);
-			flies.add(fly);
-
-			timer = 0;
-			if (waitTime >= 0.25)
-				waitTime -= (0.1 - waitTime) * 0.9;
-		}
-
-		FlxG.watch.addQuick("DJSKD", timer);
-		FlxG.watch.addQuick("DJSKD max", waitTime / waitRandom);
-
-		var isCursor:Bool = false;
-
-		for (area in areaFlies)
-		{
-			area.angle += elapsed * 15;
-		}
-
-		for (fly in flies)
-		{
-			// timer += elapsed * 100;
-			// fly.updateBeat(timer);
-
-			if (fly.canInteract && fly.active)
+			if (timer >= waitTime / waitRandom)
 			{
-				// fly.area.setPosition(fly.destiny.x, fly.destiny.y);
-				// fly.area.visible = true;
-				fly.area.alpha += (0.6 - fly.area.alpha) * (elapsed * 6);
+				var fly = new Fly(FlxG.random.float(1, 2.5), this);
+				fly.canInteract = fly.active = true;
+				// fly.ID;
 
-				if (FlxG.mouse.overlaps(fly.area))
+				// var area = new FlxSprite().makeGraphic(Std.int(fly.width), Std.int(fly.height), 0x8CFF0000);
+				var area = new FlxSprite().loadGraphic("assets/images/CURSOR.png");
+				area.setGraphicSize(Std.int(fly.width * 1.2));
+				// area.setPosition((fly.destiny.x + ((fly.width - area.width) / 2)), (fly.destiny.x + ((fly.height - area.height) / 2)));
+				area.setPosition(fly.destiny.x, fly.destiny.y);
+				area.offset.x -= 6;
+				area.offset.y -= 6;
+
+				fly.area = area;
+
+				areaFlies.add(area);
+				flies.add(fly);
+
+				timer = 0;
+				if (waitTime >= 0.65)
+					waitTime -= 0.1;
+			}
+
+			var isCursor:Bool = false;
+
+			for (fly in flies)
+			{
+				// timer += elapsed * 100;
+				// fly.updateBeat(timer);
+
+				if (fly.canInteract && fly.active)
 				{
-					isCursor = true;
-					// Lib.current.stage.window.cursor = POINTER;
-					if (FlxG.mouse.justPressed
-						&& fly.x >= (fly.destiny.x - (30 * fly.speed))
-						&& fly.y >= (fly.destiny.y - (30 * fly.speed)))
+					// fly.area.setPosition(fly.destiny.x, fly.destiny.y);
+					// fly.area.visible = true;
+					fly.area.alpha += (0.75 - fly.area.alpha) * (elapsed * 6);
+
+					if (FlxG.mouse.overlaps(fly.area))
 					{
-						fly.onFlyHitted();
-						chameleon.animation.play("attack", true);
-						chameleon.centerOffsets();
-						chameleon.offset.x += 4;
-						chameleon.offset.y += 4;
+						isCursor = true;
+						// Lib.current.stage.window.cursor = POINTER;
+						if (FlxG.mouse.justPressed
+							&& fly.x >= (fly.destiny.x - (30 * fly.speed))
+							&& fly.y >= (fly.destiny.y - (30 * fly.speed)))
+						{
+							fly.onFlyHitted();
+							chameleon.animation.play("attack", true);
+							chameleon.centerOffsets();
+							chameleon.offset.x -= 1;
+							chameleon.offset.y += 2;
 
-						FlxG.sound.play("assets/sounds/attack.mp3");
+							FlxG.sound.play("assets/sounds/attack.mp3");
 
-						//
-						var rating:FlxText = new FlxText("+100");
-						rating.setFormat(FlxAssets.FONT_DEFAULT, 32, FlxColor.BLACK, LEFT, OUTLINE_FAST, FlxColor.WHITE);
-						rating.y = FlxG.mouse.y - (rating.height / 2);
-						rating.x = FlxG.mouse.x - (rating.width / 2);
-						add(rating);
+							//
+							var rating:FlxText = new FlxText("+100");
+							rating.setFormat(FlxAssets.FONT_DEFAULT, 32, FlxColor.BLACK, LEFT, OUTLINE_FAST, FlxColor.WHITE);
+							rating.y = FlxG.mouse.y - (rating.height / 2);
+							rating.x = FlxG.mouse.x - (rating.width / 2);
+							add(rating);
 
-						FlxTween.tween(rating, {y: rating.y - 50}, 1, {
-							onComplete: (_) ->
-							{
-								rating.kill();
-								remove(rating);
-							}
-						});
+							FlxTween.tween(rating, {y: rating.y - 50}, 1, {
+								onComplete: (_) ->
+								{
+									rating.kill();
+									remove(rating);
+								}
+							});
 
-						score += 100;
+							score += 100;
+						}
 					}
 				}
 			}
+
+			for (area in areaFlies)
+			{
+				area.angle += elapsed * 15;
+			}
+
+			if (isCursor)
+				Lib.current.stage.window.cursor = POINTER;
+			else
+				Lib.current.stage.window.cursor = DEFAULT;
 		}
 
 		if (chameleon.animation.finished && chameleon.animation.name == "attack")
@@ -188,11 +211,6 @@ class PlayState extends FlxState
 
 		if (tongue.animation.finished)
 			tongue.visible = false;
-
-		if (isCursor)
-			Lib.current.stage.window.cursor = POINTER;
-		else
-			Lib.current.stage.window.cursor = DEFAULT;
 	}
 
 	public function whenFlyKilled(fly:Fly):Void
@@ -223,5 +241,9 @@ class PlayState extends FlxState
 		health--;
 
 		areaFlies.remove(fly.area);
+		// flies.remove(fly);
+
+		if (health < 1)
+			openSubState(new Retry(score));
 	}
 }

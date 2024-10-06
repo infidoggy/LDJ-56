@@ -13,10 +13,10 @@ class Chameleon extends FlxSprite
 		var path = "assets/images/CHAMELEON_SPRITE_SHEET";
 
 		frames = FlxAtlasFrames.fromSparrow(path + ".png", path + ".xml");
-		animation.addByPrefix("idle", "CHAMELEON LIL DANCE0", 24, false);
+		animation.addByPrefix("idle", "CHAMELEON LIL DANCE0", 24);
 		animation.addByPrefix("attack", "CHAMELEON ATTACK0", 24, false);
 		animation.play("idle");
 
-		setGraphicSize(Std.int(width * 0.65));
+		setGraphicSize(Std.int(width * 0.8));
 	}
 }

@@ -16,6 +16,7 @@ import openfl.Lib;
 class PlayState extends FlxState
 {
 	private var chameleon:Chameleon;
+	private var tongue:Tongue;
 
 	private var flies:FlxTypedGroup<Fly>;
 	private var areaFlies:FlxTypedGroup<FlxSprite>;
@@ -28,19 +29,28 @@ class PlayState extends FlxState
 	private var scoreGrp:FlxTypedGroup<FlxText>;
 
 	// private var areaReference:FlxSprite;
-	private var level:Int = 1;
+	// private var level:Int = 1;
 
 	override public function create()
 	{
 		FlxG.camera.bgColor = 0xFFFFFFFF;
 
+		FlxG.sound.playMusic("assets/music/Camaleon.mp3");
+
 		super.create();
+		var bg = new FlxSprite().loadGraphic("assets/images/Bg.png");
+		add(bg);
+
 		chameleon = new Chameleon();
 		chameleon.setPosition(FlxG.width - chameleon.width - 50, FlxG.height - chameleon.height - 50);
 		add(chameleon);
 
 		add(areaFlies = new FlxTypedGroup());
 		add(flies = new FlxTypedGroup());
+
+		tongue = new Tongue();
+		tongue.setPosition((chameleon.x - chameleon.width) + 128, (chameleon.y - chameleon.height) + 100);
+		add(tongue);
 
 		scoreTxt = new FlxText("Score: 0", 32);
 		scoreTxt.setFormat(FlxAssets.FONT_DEFAULT, 32, LEFT, OUTLINE_FAST, FlxColor.BLACK);
@@ -73,6 +83,7 @@ class PlayState extends FlxState
 	override public function update(elapsed:Float)
 	{
 		super.update(elapsed);
+
 		scoreTxt.text = "Score: " + score;
 		healthTxt.text = "" + health;
 
@@ -101,8 +112,8 @@ class PlayState extends FlxState
 			flies.add(fly);
 
 			timer = 0;
-			if (waitTime >= 0.55)
-				waitTime -= 0.15;
+			if (waitTime >= 0.25)
+				waitTime -= (0.1 - waitTime) * 0.9;
 		}
 
 		FlxG.watch.addQuick("DJSKD", timer);
@@ -120,22 +131,28 @@ class PlayState extends FlxState
 			// timer += elapsed * 100;
 			// fly.updateBeat(timer);
 
-			if (fly.active && fly.visible)
+			if (fly.canInteract && fly.active)
 			{
-				// areaFlies.members[fly.ID].setPosition(fly.destiny.x, fly.destiny.y);
-				// areaFlies.members[fly.ID].visible = true;
-				// areaFlies.members[fly.ID].alpha += (0.6 - areaFlies.members[fly.ID].alpha) * (elapsed * 6);
+				// fly.area.setPosition(fly.destiny.x, fly.destiny.y);
+				// fly.area.visible = true;
+				fly.area.alpha += (0.6 - fly.area.alpha) * (elapsed * 6);
 
 				if (FlxG.mouse.overlaps(fly.area))
 				{
 					isCursor = true;
 					// Lib.current.stage.window.cursor = POINTER;
 					if (FlxG.mouse.justPressed
-						&& fly.x >= (fly.destiny.x - (15 * fly.speed))
-						&& fly.y >= (fly.destiny.y - (15 * fly.speed)))
+						&& fly.x >= (fly.destiny.x - (30 * fly.speed))
+						&& fly.y >= (fly.destiny.y - (30 * fly.speed)))
 					{
 						fly.onFlyHitted();
-						chameleon.animation.play("attack");
+						chameleon.animation.play("attack", true);
+						chameleon.centerOffsets();
+						chameleon.offset.x += 4;
+						chameleon.offset.y += 4;
+
+						FlxG.sound.play("assets/sounds/attack.mp3");
+
 						//
 						var rating:FlxText = new FlxText("+100");
 						rating.setFormat(FlxAssets.FONT_DEFAULT, 32, FlxColor.BLACK, LEFT, OUTLINE_FAST, FlxColor.WHITE);
@@ -158,7 +175,19 @@ class PlayState extends FlxState
 		}
 
 		if (chameleon.animation.finished && chameleon.animation.name == "attack")
+		{
 			chameleon.animation.play("idle");
+			chameleon.centerOffsets();
+		}
+
+		if (chameleon.animation.name == "attack" && chameleon.animation.frameIndex == 1)
+		{
+			tongue.visible = true;
+			tongue.animation.play("idle", true);
+		}
+
+		if (tongue.animation.finished)
+			tongue.visible = false;
 
 		if (isCursor)
 			Lib.current.stage.window.cursor = POINTER;

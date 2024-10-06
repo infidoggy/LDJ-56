@@ -17,6 +17,7 @@ class Chameleon extends FlxSprite
 		animation.addByPrefix("attack", "CHAMELEON ATTACK0", 24, false);
 		animation.play("idle");
 
-		setGraphicSize(Std.int(width * 0.8));
+		setGraphicSize(Std.int(width * 0.85));
+		centerOffsets();
 	}
 }

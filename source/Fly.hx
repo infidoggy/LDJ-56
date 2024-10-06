@@ -19,6 +19,8 @@ class Fly extends FlxSprite
 
 	public var parent:PlayState;
 
+	public var canInteract:Bool = true;
+
 	public function new(Speed:Float, Parent:PlayState)
 	{
 		super();
@@ -35,7 +37,7 @@ class Fly extends FlxSprite
 		// speed = (FlxG.random.float(0.8, 1.8) * (1 + (((time / 1000) / 30) / 2))) * 0.8;
 		speed = Speed;
 		
-		destiny = new FlxPoint(FlxG.random.float(15, (FlxG.width - width) * 0.65), FlxG.random.float(15, FlxG.height - height - 15));
+		destiny = new FlxPoint(FlxG.random.float(15, (FlxG.width - width) * 0.45), FlxG.random.float(30, FlxG.height - height - 30));
 
 		FlxTween.tween(this, {x: destiny.x, y: destiny.y}, 0.5 * speed, {
 			ease: FlxEase.sineInOut
@@ -54,22 +56,23 @@ class Fly extends FlxSprite
 		{
 			timerToFail += elapsed;
 
-			if (timerToFail >= 0.75)
+			if (timerToFail >= 1)
 				failFly();
 		}
 	}
 
 	private function failFly():Void
 	{
-		active = false;
+		// active = false;
+		canInteract = false;
+		parent.onFlyFailed(this);
 
 		FlxTween.tween(this, {y: -height}, 1.2, {
-			ease: FlxEase.sineInOut,
+			ease: FlxEase.quadIn,
 			onComplete: (_) ->
 			{
 				kill();
 				parent.whenFlyKilled(this);
-				parent.onFlyFailed(this);
 				// destroy();
 			}
 		});
@@ -80,11 +83,11 @@ class Fly extends FlxSprite
 		active = false;
 
 		FlxTween.tween(this, {alpha: 0, "scale.x": scale.x + 0.3, "scale.y": scale.y + 0.3}, 0.5, {
-			ease: FlxEase.quadInOut,
+			ease: FlxEase.sineInOut,
 			onComplete: (_) ->
 			{
-				kill();
 				parent.whenFlyKilled(this);
+				kill();
 				// destroy();
 			}
 		});

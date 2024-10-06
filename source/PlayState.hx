@@ -53,7 +53,7 @@ class PlayState extends FlxState
 		add(flies = new FlxTypedGroup());
 
 		tongue = new Tongue();
-		tongue.setPosition((chameleon.x - chameleon.width) + 128, (chameleon.y - chameleon.height) + 100);
+		tongue.setPosition((chameleon.x - chameleon.width) + 138, (chameleon.y - chameleon.height) + 100);
 		add(tongue);
 
 		scoreTxt = new FlxText("Score: 0", 32);
